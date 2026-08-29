@@ -1,3 +1,23 @@
+from openai import OpenAI
+
+client = OpenAI()
+
+
+def ask_ai(prompt):
+    try:
+        response = client.responses.create(
+            model="gpt-5-mini",
+            input=prompt
+        )
+        return response.output_text
+
+    except Exception:
+        return (
+            "\n[AI service is currently unavailable.]"
+            "\nThe feature will work when API access is available."
+        )
+
+
 print("================================")
 print("       AI STUDY ASSISTANT")
 print("================================")
@@ -17,18 +37,36 @@ while True:
 
     if choice == "1":
         topic = input("\nEnter the topic you want to summarize: ")
-        print(f"\nYour topic: {topic}")
-        print("Summary feature coming soon...")
+
+        result = ask_ai(
+            f"Summarize this topic for a student "
+            f"in a clear and simple way:\n\n{topic}"
+        )
+
+        print("\n--- AI SUMMARY ---")
+        print(result)
 
     elif choice == "2":
         topic = input("\nEnter the topic for your quiz: ")
-        print(f"\nCreating quiz questions about: {topic}")
-        print("Quiz feature coming soon...")
+
+        result = ask_ai(
+            f"Create 5 multiple-choice quiz questions "
+            f"about {topic}. Include the correct answer."
+        )
+
+        print("\n--- AI QUIZ ---")
+        print(result)
 
     elif choice == "3":
         concept = input("\nEnter the concept you want explained: ")
-        print(f"\nExplaining: {concept}")
-        print("Explanation feature coming soon...")
+
+        result = ask_ai(
+            f"Explain {concept} to a beginner "
+            f"using simple language and an example."
+        )
+
+        print("\n--- AI EXPLANATION ---")
+        print(result)
 
     elif choice == "4":
         print("\nThank you for using AI Study Assistant!")
