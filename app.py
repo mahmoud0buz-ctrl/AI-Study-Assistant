@@ -13,8 +13,6 @@ HISTORY_FILE = "study_history.json"
 
 
 def load_history():
-    """Load saved study history from the JSON file."""
-
     if not os.path.exists(HISTORY_FILE):
         return []
 
@@ -26,8 +24,6 @@ def load_history():
 
 
 def save_history():
-    """Save study history to the JSON file."""
-
     try:
         with open(HISTORY_FILE, "w", encoding="utf-8") as file:
             json.dump(study_history, file, indent=4, ensure_ascii=False)
@@ -39,26 +35,18 @@ study_history = load_history()
 
 
 def ask_ai(prompt):
-    """Send a request to the AI and handle errors safely."""
-
     try:
         response = client.responses.create(
             model="gpt-5-mini",
             input=prompt
         )
-
         return response.output_text
 
     except Exception:
-        return (
-            "AI service is currently unavailable.\n"
-            "This may be because the API has no available credits."
-        )
+        return None
 
 
 def add_history(activity_type, topic):
-    """Add a study activity to the history."""
-
     activity = {
         "type": activity_type,
         "topic": topic,
@@ -69,34 +57,166 @@ def add_history(activity_type, topic):
     save_history()
 
 
-def show_history():
-    """Display study history."""
+# ==========================================
+# LOCAL QUIZ
+# ==========================================
 
-    print("\n================================")
-    print("         STUDY HISTORY")
-    print("================================")
+quiz_questions = {
+    "python": [
+        {
+            "question": "Which symbol is used to create a comment in Python?",
+            "options": ["//", "#", "/*", "--"],
+            "answer": 2
+        },
+        {
+            "question": "Which function is used to display text in Python?",
+            "options": ["show()", "display()", "print()", "write()"],
+            "answer": 3
+        },
+        {
+            "question": "Which data type stores True or False?",
+            "options": ["String", "Boolean", "Integer", "Float"],
+            "answer": 2
+        },
+        {
+            "question": "Which keyword is used to define a function?",
+            "options": ["function", "define", "def", "func"],
+            "answer": 3
+        },
+        {
+            "question": "Which symbol is used for multiplication?",
+            "options": ["x", "*", "%", "^"],
+            "answer": 2
+        }
+    ],
 
-    if not study_history:
-        print("\nNo study activities yet.")
+    "artificial intelligence": [
+        {
+            "question": "What does AI stand for?",
+            "options": [
+                "Automated Internet",
+                "Artificial Intelligence",
+                "Advanced Information",
+                "Automatic Intelligence"
+            ],
+            "answer": 2
+        },
+        {
+            "question": "Which field is closely related to AI?",
+            "options": [
+                "Machine Learning",
+                "Photography",
+                "Accounting",
+                "Architecture"
+            ],
+            "answer": 1
+        },
+        {
+            "question": "What is machine learning?",
+            "options": [
+                "A type of computer hardware",
+                "A method where computers learn from data",
+                "A programming language",
+                "A web browser"
+            ],
+            "answer": 2
+        },
+        {
+            "question": "Which is an example of AI?",
+            "options": [
+                "A calculator doing 2 + 2",
+                "A simple light switch",
+                "A recommendation system",
+                "A USB cable"
+            ],
+            "answer": 3
+        },
+        {
+            "question": "What is training data used for?",
+            "options": [
+                "Teaching a machine learning model",
+                "Charging a computer",
+                "Installing Windows",
+                "Creating a keyboard"
+            ],
+            "answer": 1
+        }
+    ]
+}
+
+
+def run_local_quiz(topic):
+    topic_key = topic.lower().strip()
+
+    if topic_key not in quiz_questions:
+        print("\nWe don't have a local quiz for this topic yet.")
+        print("Try: Python")
+        print("or: Artificial Intelligence")
         return
 
-    for number, activity in enumerate(study_history, start=1):
-        print(f"\n{number}. {activity['type']}")
-        print(f"   Topic: {activity['topic']}")
-        print(f"   Time: {activity['time']}")
+    questions = quiz_questions[topic_key]
+
+    score = 0
+
+    print("\n================================")
+    print("          QUIZ START")
+    print("================================")
+
+    for number, question in enumerate(questions, start=1):
+
+        print(f"\nQuestion {number}:")
+        print(question["question"])
+
+        for index, option in enumerate(question["options"], start=1):
+            print(f"{index}. {option}")
+
+        while True:
+            answer = input("\nYour answer (1-4): ")
+
+            if answer in ["1", "2", "3", "4"]:
+                answer = int(answer)
+                break
+
+            print("Please enter a number from 1 to 4.")
+
+        if answer == question["answer"]:
+            print("Correct! ✅")
+            score += 1
+        else:
+            correct = question["options"][question["answer"] - 1]
+            print(f"Incorrect ❌")
+            print(f"Correct answer: {correct}")
+
+    print("\n================================")
+    print("          QUIZ RESULT")
+    print("================================")
+
+    print(f"\nYour score: {score}/{len(questions)}")
+
+    percentage = (score / len(questions)) * 100
+
+    print(f"Percentage: {percentage:.0f}%")
+
+    if percentage == 100:
+        print("Excellent! 🏆")
+
+    elif percentage >= 80:
+        print("Great job! 🎉")
+
+    elif percentage >= 60:
+        print("Good effort! Keep practicing. 💪")
+
+    else:
+        print("Keep studying and try again! 📚")
+
+    add_history("Quiz", topic)
 
 
-def clear_history():
-    """Clear all saved study history."""
-
-    study_history.clear()
-    save_history()
-
-    print("\nStudy history cleared.")
-
+# ==========================================
+# AI FEATURES
+# ==========================================
 
 def summarize_topic():
-    """Summarize a topic using AI."""
 
     topic = input("\nEnter the topic you want to summarize: ")
 
@@ -121,13 +241,17 @@ Requirements:
     )
 
     print("\n--- AI SUMMARY ---")
-    print(result)
+
+    if result:
+        print(result)
+    else:
+        print("AI service is currently unavailable.")
+        print("You can continue using the local study features.")
 
     add_history("Summary", topic)
 
 
 def generate_quiz():
-    """Generate quiz questions using AI."""
 
     topic = input("\nEnter the topic for your quiz: ")
 
@@ -135,7 +259,15 @@ def generate_quiz():
         print("\nPlease enter a valid topic.")
         return
 
-    print("\nGenerating quiz...")
+    # Try local quiz first
+    topic_key = topic.lower().strip()
+
+    if topic_key in quiz_questions:
+        run_local_quiz(topic)
+        return
+
+    # Try AI if no local quiz exists
+    print("\nGenerating AI quiz...")
 
     result = ask_ai(
         f"""
@@ -152,13 +284,18 @@ Requirements:
     )
 
     print("\n--- AI QUIZ ---")
-    print(result)
 
-    add_history("Quiz", topic)
+    if result:
+        print(result)
+        add_history("Quiz", topic)
+    else:
+        print("AI service is currently unavailable.")
+        print("\nAvailable offline quiz topics:")
+        print("- Python")
+        print("- Artificial Intelligence")
 
 
 def explain_concept():
-    """Explain a concept using AI."""
 
     concept = input("\nEnter the concept you want explained: ")
 
@@ -183,13 +320,59 @@ Requirements:
     )
 
     print("\n--- AI EXPLANATION ---")
-    print(result)
+
+    if result:
+        print(result)
+    else:
+        print("AI service is currently unavailable.")
+        print("The explanation feature requires API access.")
 
     add_history("Explanation", concept)
 
 
+# ==========================================
+# HISTORY
+# ==========================================
+
+def show_history():
+
+    print("\n================================")
+    print("         STUDY HISTORY")
+    print("================================")
+
+    if not study_history:
+        print("\nNo study activities yet.")
+        return
+
+    for number, activity in enumerate(study_history, start=1):
+
+        print(f"\n{number}. {activity['type']}")
+        print(f"   Topic: {activity['topic']}")
+        print(f"   Time: {activity['time']}")
+
+
+def clear_history():
+
+    confirmation = input(
+        "\nAre you sure you want to clear your history? (yes/no): "
+    )
+
+    if confirmation.lower() == "yes":
+
+        study_history.clear()
+        save_history()
+
+        print("\nStudy history cleared. 🗑️")
+
+    else:
+        print("\nHistory was not changed.")
+
+
+# ==========================================
+# MAIN PROGRAM
+# ==========================================
+
 def main():
-    """Run the main application."""
 
     print("================================")
     print("       AI STUDY ASSISTANT")
@@ -204,6 +387,7 @@ def main():
     print("Your AI Study Assistant is ready.")
 
     while True:
+
         print("\n================================")
         print("             MENU")
         print("================================")
